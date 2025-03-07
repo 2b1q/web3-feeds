@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "outDir": "lib",
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "target": "es2017",
+    "strict": true,
+    "skipLibCheck": true  // Skip type checking of all declaration files (*.d.ts).
+  },
+  "include": ["src/**/*"],
+  "exclude": [
+    "**/node_modules/*",
+    "../**/node_modules/*",
+    "../src"
+  ]
+}
