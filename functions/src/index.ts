@@ -2,31 +2,20 @@ import axios from 'axios';
 import { XMLParser } from 'fast-xml-parser';
 import * as functions from 'firebase-functions';
 import { Request, Response } from 'express';
-import { BaseRssItem, RssChannelResponse, RssItem, RssResponse, RssSourse } from './interfaces';
+import { BaseRssItem, errors, httpCode, RssChannelResponse, RssItem, RssResponse, RssSourse } from './interfaces';
+import { HttpsError } from 'firebase-functions/https';
+import { defineString } from 'firebase-functions/params';
+import { callOpts, RSS_FEEDS } from './config';
 
-const RSS_FEEDS = [
-    {
-        title: 'CoinDesk',
-        logoURI:
-            'https://www.coindesk.com/resizer/fTK3gATlyciJ-BZG2_OP12niDe0=/144x32/downloads.coindesk.com/arc/failsafe/feeds/coindesk-feed-logo.png',
-        rssURI: 'https://www.coindesk.com/arc/outboundfeeds/rss/?outputType=xml',
-    },
-    {
-        title: 'Cointelegraph',
-        logoURI: 'https://cointelegraph.com/assets/img/CT_Logo_YG_tag.png',
-        rssURI: 'https://cointelegraph.com/rss',
-    },
-    {
-        title: 'Decrypt',
-        logoURI: '',
-        rssURI: 'https://decrypt.co/feed',
-    },
-    {
-        title: 'Forbes',
-        logoURI: '',
-        rssURI: 'https://www.forbes.com/crypto-blockchain/feed',
-    },
-];
+const API_KEY = defineString('API_KEY').value();
+
+function validateAuth(req: Request) {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || authHeader !== `Bearer ${API_KEY}`) {
+        functions.logger.error('Unauthorized access attempt');
+        throw new HttpsError(httpCode.BAD_AUTH, errors.BAD_AUTH);
+    }
+}
 
 async function fetchRssFeed(rssSource: RssSourse): Promise<RssResponse | void> {
     try {
@@ -73,7 +62,9 @@ function transformRssItem(item: BaseRssItem): RssItem {
     };
 }
 
-exports.getAllFeeds = functions.https.onRequest(async (_: Request, res: Response) => {
+exports.getAllFeeds = functions.https.onRequest(callOpts, async (req: Request, res: Response) => {
+    validateAuth(req);
+
     try {
         const rssResponses = await Promise.all(RSS_FEEDS.map(fetchRssFeed));
         const validRssResponses = rssResponses.filter((response): response is RssResponse => response !== undefined);
@@ -81,6 +72,7 @@ exports.getAllFeeds = functions.https.onRequest(async (_: Request, res: Response
         res.json(transformedFeeds);
     } catch (error) {
         functions.logger.error('Error fetching all RSS feeds:', error);
-        res.status(500).send('Internal Server Error');
+
+        throw new HttpsError(httpCode.INTERNAL, errors.INTERNAL);
     }
 });

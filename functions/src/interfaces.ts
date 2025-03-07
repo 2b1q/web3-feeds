@@ -87,3 +87,19 @@ export interface RssChannelResponse {
     language: string;
     items: RssItem[];
 }
+
+// infra entities/interfaces
+export enum httpCode {
+    BAD_AUTH = 'unauthenticated',
+    BAD_PAYLOAD = 'invalid-argument',
+    NOT_FOUND = 'not-found',
+    ABORTED = 'aborted',
+    INTERNAL = 'internal',
+}
+
+export const errors = {
+    BAD_AUTH: 'Auth error',
+    BAD_PAYLOAD: 'invalid payload',
+    INTERNAL: 'Internal Server Error',
+    NOT_FOUND: 'Not Found',
+};
