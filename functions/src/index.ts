@@ -7,13 +7,15 @@ import { HttpsError } from 'firebase-functions/https';
 import { defineString } from 'firebase-functions/params';
 import { callOpts, RSS_FEEDS } from './config';
 
-const API_KEY = defineString('API_KEY').value();
+const API_KEY = defineString('API_KEY');
 
-function validateAuth(req: Request) {
-    const authHeader = req.headers['authorization'];
-    if (!authHeader || authHeader !== `Bearer ${API_KEY}`) {
+function validateAuth(req: Request): void | never {
+    const authHeader = req.get('authorization') as string;
+    if (!authHeader || authHeader !== `Bearer ${API_KEY.value()}`) {
+        functions.logger.warn(req.headers);
         functions.logger.error('Unauthorized access attempt');
-        throw new HttpsError(httpCode.BAD_AUTH, errors.BAD_AUTH);
+
+        throw new HttpsError('unauthenticated', errors.UNAUTHORIZED)
     }
 }
 
@@ -27,6 +29,7 @@ async function fetchRssFeed(rssSource: RssSourse): Promise<RssResponse | void> {
         return parser.parse(response.data);
     } catch (error) {
         functions.logger.error(`Error fetching RSS feed from ${rssSource.title}:`, error);
+        throw new HttpsError('aborted', errors.RSS_FETCH_FAILED)
     }
 }
 
@@ -62,17 +65,31 @@ function transformRssItem(item: BaseRssItem): RssItem {
     };
 }
 
-exports.getAllFeeds = functions.https.onRequest(callOpts, async (req: Request, res: Response) => {
-    validateAuth(req);
-
+exports.getAllFeeds = functions.https.onRequest(callOpts, async (req: Request, res: Response): Promise<void> => {
     try {
+        validateAuth(req);
         const rssResponses = await Promise.all(RSS_FEEDS.map(fetchRssFeed));
         const validRssResponses = rssResponses.filter((response): response is RssResponse => response !== undefined);
-        const transformedFeeds = validRssResponses.map(transformRssResponse).filter(Boolean);
+
+        const transformedFeeds = validRssResponses
+            .map(transformRssResponse)
+            .filter(Boolean);
+
         res.json(transformedFeeds);
     } catch (error) {
-        functions.logger.error('Error fetching all RSS feeds:', error);
+        functions.logger.error('Error getAllFeeds:', error);
 
-        throw new HttpsError(httpCode.INTERNAL, errors.INTERNAL);
+        if (error instanceof HttpsError) {
+            switch (error.message) {
+                case errors.UNAUTHORIZED:
+                    res.status(httpCode.BAD_AUTH).json({ error: errors.UNAUTHORIZED });
+                    return;
+                case errors.RSS_FETCH_FAILED:
+                    res.status(httpCode.ABORTED).json({ error: errors.RSS_FETCH_FAILED });
+                    return;
+            }
+        }
+
+        res.status(httpCode.INTERNAL).json({ error: errors.INTERNAL });
     }
 });

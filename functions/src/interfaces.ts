@@ -90,16 +90,20 @@ export interface RssChannelResponse {
 
 // infra entities/interfaces
 export enum httpCode {
-    BAD_AUTH = 'unauthenticated',
-    BAD_PAYLOAD = 'invalid-argument',
-    NOT_FOUND = 'not-found',
-    ABORTED = 'aborted',
-    INTERNAL = 'internal',
+    BAD_AUTH = 401,
+    BAD_PAYLOAD = 400,
+    NOT_FOUND = 404,
+    ABORTED = 409,
+    INTERNAL = 500,
 }
 
 export const errors = {
     BAD_AUTH: 'Auth error',
-    BAD_PAYLOAD: 'invalid payload',
+    BAD_PAYLOAD: 'Invalid payload',
     INTERNAL: 'Internal Server Error',
     NOT_FOUND: 'Not Found',
+    UNAUTHORIZED: 'Unauthorized',
+    ABORTED: 'Operation aborted',
+    RSS_EMPTY_DATA: 'No Data Returned from RSS',
+    RSS_FETCH_FAILED: 'Failed to Fetch RSS'
 };
