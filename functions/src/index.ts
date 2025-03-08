@@ -68,12 +68,21 @@ function transformRssItem(item: BaseRssItem): RssItem {
 exports.getAllFeeds = functions.https.onRequest(callOpts, async (req: Request, res: Response): Promise<void> => {
     try {
         validateAuth(req);
-        const rssResponses = await Promise.all(RSS_FEEDS.map(fetchRssFeed));
-        const validRssResponses = rssResponses.filter((response): response is RssResponse => response !== undefined);
 
-        const transformedFeeds = validRssResponses
+        const rssResponses = await Promise.allSettled(RSS_FEEDS.map(fetchRssFeed));
+
+        const successfulResponses = rssResponses
+            .filter((result): result is PromiseFulfilledResult<RssResponse> => result.status === 'fulfilled' && result.value !== undefined)
+            .map(result => result.value);
+
+        const transformedFeeds = successfulResponses
             .map(transformRssResponse)
             .filter(Boolean);
+
+        if (transformedFeeds.length === 0) {
+            res.status(httpCode.ABORTED).json({ error: errors.RSS_FETCH_FAILED });
+            return;
+        }
 
         res.json(transformedFeeds);
     } catch (error) {
@@ -83,9 +92,6 @@ exports.getAllFeeds = functions.https.onRequest(callOpts, async (req: Request, r
             switch (error.message) {
                 case errors.UNAUTHORIZED:
                     res.status(httpCode.BAD_AUTH).json({ error: errors.UNAUTHORIZED });
-                    return;
-                case errors.RSS_FETCH_FAILED:
-                    res.status(httpCode.ABORTED).json({ error: errors.RSS_FETCH_FAILED });
                     return;
             }
         }

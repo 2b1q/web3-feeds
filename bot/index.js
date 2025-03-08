@@ -21,7 +21,7 @@ const NEWS_PROVIDERS = {
 };
 
 const DEFAULT_NEWS_COUNT = 3;
-const MAX_NEWS_COUNT = 10; 
+const MAX_NEWS_COUNT = 10;
 
 const ERROR_MESSAGES = {
     COMMON_USER_RSS_ERROR: '❌ Ошибка загрузки новостей.',
@@ -36,10 +36,44 @@ const ERROR_MESSAGES = {
                      `/news all [n] - получить последние n новостей от всех провайдеров (макс. ${MAX_NEWS_COUNT})`
 };
 
-bot.start((ctx) => {
-    logRequest(ctx, '/start');
-    ctx.reply(`👋 Привет! Я бот, который присылает последние новости.\n\n${ERROR_MESSAGES.INVALID_COMMAND}`);
-});
+const formatNews = (sourceTitle, items, count) => {
+    if (!Array.isArray(items) || items.length === 0) {
+        console.warn(`⚠️ Warning: Data from ${sourceTitle} is empty or invalid.`);
+        return `<b>🔹 ${sourceTitle} 🔹</b>\n\n${ERROR_MESSAGES.COMMON_USER_RSS_ERROR}`;
+    }
+
+    const newsItems = items.slice(0, count).map((item, index) => {
+        const date = new Date(item.pubDate).toLocaleString('ru-RU');
+        return `📰 <b>${index + 1}. ${item.title}</b>\n📅 ${date}\n<a href="${item.link}">Читать полностью</a>`;
+    }).join('\n\n');
+
+    return `<b>🔹 ${sourceTitle} 🔹</b>\n\n${newsItems}`;
+};
+
+const safelyParseRssChannel = (channelData, providerName) => {
+    try {
+        return parseRssChannel(channelData);
+    } catch (error) {
+        console.error(`❌ Error parsing data for provider ${providerName}:`, error);
+        return [];
+    }
+};
+
+function parseRssChannel(channelData) {
+    if (!channelData || typeof channelData !== 'object' || !Array.isArray(channelData.items)) {
+        console.warn('⚠️ Warning: Failed to parse RSS provider data:', channelData);
+        return [];
+    }
+    return channelData.items.map((item) => ({
+        title: item.title || 'Без названия',
+        pubDate: item.pubDate || 'Нет даты',
+        link: item.link || '#',
+        id: item.id || '',
+        author: item.author || 'Неизвестный автор',
+        thumbnail: item.thumbnail || '',
+        description: item.description || 'Описание отсутствует'
+    }));
+};
 
 bot.command('news', async (ctx) => {
     logRequest(ctx, '/news');
@@ -64,23 +98,9 @@ bot.command('news', async (ctx) => {
         }
 
         const providersMap = {
-            coindesk: parseRssChannel(response.data[NEWS_PROVIDERS.coindesk]),
-            cointelegraph: parseRssChannel(response.data[NEWS_PROVIDERS.cointelegraph]),
-            decrypt: parseRssChannel(response.data[NEWS_PROVIDERS.decrypt])
-        };
-
-        const formatNews = (sourceTitle, items, count) => {
-            if (!Array.isArray(items)) {
-                console.warn(`⚠️ Warning: Data from ${sourceTitle} is not an array.`);
-                return `<b>🔹 ${sourceTitle} 🔹</b>\n\n${ERROR_MESSAGES.COMMON_USER_RSS_ERROR}`;
-            }
-
-            const newsItems = items.slice(0, count).map((item, index) => {
-                const date = new Date(item.pubDate).toLocaleString('ru-RU');
-                return `📰 <b>${index + 1}. ${item.title}</b>\n📅 ${date}\n<a href="${item.link}">Читать полностью</a>`;
-            }).join('\n\n');
-
-            return `<b>🔹 ${sourceTitle} 🔹</b>\n\n${newsItems}`;
+            coindesk: safelyParseRssChannel(response.data[NEWS_PROVIDERS.coindesk], 'coindesk'),
+            cointelegraph: safelyParseRssChannel(response.data[NEWS_PROVIDERS.cointelegraph], 'cointelegraph'),
+            decrypt: safelyParseRssChannel(response.data[NEWS_PROVIDERS.decrypt], 'decrypt')
         };
 
         let formattedNews;
@@ -107,22 +127,6 @@ bot.on('text', (ctx) => {
     logRequest(ctx, 'UNKNOWN_COMMAND');
     ctx.reply(ERROR_MESSAGES.INVALID_COMMAND);
 });
-
-function parseRssChannel(channelData) {
-    if (!channelData || typeof channelData !== 'object' || !Array.isArray(channelData.items)) {
-        console.warn('⚠️ Warning: Failed to parse RSS provider data:', channelData);
-        return [];
-    }
-    return channelData.items.map((item) => ({
-        title: item.title || 'Без названия',
-        pubDate: item.pubDate || 'Нет даты',
-        link: item.link || '#',
-        id: item.id || '',
-        author: item.author || 'Неизвестный автор',
-        thumbnail: item.thumbnail || '',
-        description: item.description || 'Описание отсутствует'
-    }));
-}
 
 function logRequest(ctx, command) {
     const user = ctx.from;
