@@ -21,17 +21,19 @@ const NEWS_PROVIDERS = {
 };
 
 const DEFAULT_NEWS_COUNT = 3;
+const MAX_NEWS_COUNT = 10; 
 
 const ERROR_MESSAGES = {
     COMMON_USER_RSS_ERROR: '❌ Ошибка загрузки новостей.',
     PROVIDER_NOT_FOUND: '❌ Неизвестный провайдер. Доступные провайдеры: coindesk, cointelegraph, decrypt.',
     NO_RSS_DATA: '❌ Не удалось получить данные от RSS провайдеров.',
     FETCH_ERROR: '❌ Ошибка получения новостей.',
+    TOO_MANY_NEWS: `❌ Нельзя запрашивать больше ${MAX_NEWS_COUNT} новостей за раз.`,
     INVALID_COMMAND: `❌ Неизвестная команда.\n\n📌 Доступные команды:\n` +
                      '/news - получить последние 3 новости от всех провайдеров\n' +
                      '/news [provider] - получить новости от определённого провайдера (coindesk, cointelegraph, decrypt)\n' +
-                     '/news [provider] [count] - получить указанное количество новостей от провайдера\n' +
-                     '/news all [count] - получить указанное количество новостей от всех провайдеров'
+                     `/news [provider] [n] - получить последние n новостей от провайдера (макс. ${MAX_NEWS_COUNT})\n` +
+                     `/news all [n] - получить последние n новостей от всех провайдеров (макс. ${MAX_NEWS_COUNT})`
 };
 
 bot.start((ctx) => {
@@ -44,7 +46,12 @@ bot.command('news', async (ctx) => {
 
     const input = ctx.message.text.split(' ').slice(1);
     const requestedProvider = input[0]?.toLowerCase();
-    const newsCount = parseInt(input[1], 10) || DEFAULT_NEWS_COUNT;
+    let newsCount = parseInt(input[1], 10) || DEFAULT_NEWS_COUNT;
+
+    if (newsCount > MAX_NEWS_COUNT) {
+        console.warn(`⚠️ Warning: User requested ${newsCount} news, exceeding the limit of ${MAX_NEWS_COUNT}.`);
+        return ctx.reply(ERROR_MESSAGES.TOO_MANY_NEWS);
+    }
 
     try {
         const response = await axios.get(CF_FEEDS_URL, {
@@ -119,10 +126,9 @@ function parseRssChannel(channelData) {
 
 function logRequest(ctx, command) {
     const user = ctx.from;
-    console.log(`---------[incoming msg]----------\n📅 Date: ${new Date().toLocaleString('ru-RU')}`);
     console.log(`📥 Command: ${command}`);
     console.log(`👤 User: ${user.first_name} ${user.last_name || ''} (@${user.username || 'N/A'})`);
-    console.log(`🆔 User ID: ${user.id}`);
+    console.log(`🆔 User ID: ${user.id}\n`);
 }
 
 bot.launch();
