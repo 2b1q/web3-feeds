@@ -26,11 +26,12 @@
 
 #### Deploy Cloud Functions
 
-Deploy the Cloud Function:
+Deploy the Cloud Functions:
    ```sh
    firebase deploy --only functions
    ```
-   Make sure to set your API key:
+
+Make sure to set your API key:
    ```sh
    # Set YOUR_API_KEY
    ```
@@ -86,7 +87,7 @@ Add the following:
 
 #### 5. Deploy the Bot (Optional)
 
-To keep your bot running continuously, you can deploy it to a server or use a process manager like `pm2`:
+To keep your bot running continuously, deploy it to a server or use a process manager like `pm2`:
    ```sh
    pm2 start index.js --name web3-feeds-bot
    pm2 save
@@ -94,16 +95,47 @@ To keep your bot running continuously, you can deploy it to a server or use a pr
 
 ---
 
+### Serverless Telegram Bot with Cloud Functions
+
+You can run your Telegram bot entirely serverless using Firebase Cloud Functions:
+
+#### Setup Cloud Function as Webhook
+
+1. Deploy your webhook function:
+
+```sh
+firebase deploy --only functions:telegramBotWebhook
+```
+
+2. Set the Telegram webhook URL:
+
+Replace `YOUR_BOT_TOKEN` and `YOUR_WEBHOOK_URL` with your actual values:
+
+```sh
+curl -X GET "https://api.telegram.org/botYOUR_BOT_TOKEN/setWebhook?url=YOUR_WEBHOOK_URL"
+```
+
+Example webhook URL:
+
+```
+https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net/telegramBotWebhook
+```
+
+After successful webhook registration, Telegram will send all updates to your Cloud Function.
+
+---
+
 ### Telegram Bot Commands
 
 | Command                | Description |
 |------------------------|-------------|
-| `/start`              | Get started with the bot |
-| `/news`               | Fetch latest 3 news from all providers |
-| `/news [provider]`    | Get latest news from a specific provider (`coindesk`, `cointelegraph`, `decrypt`) |
-| `/news [provider] [n]`| Get last `n` news items from a provider |
-| `/news all [n]`       | Get last `n` news items from all providers |
+| `/start`               | Get started with the bot |
+| `/news`                | Fetch latest 3 news from all providers |
+| `/news [provider]`     | Get latest news from a specific provider (`coindesk`, `cointelegraph`, `decrypt`) |
+| `/news [provider] [n]` | Get last `n` news items from a provider |
+| `/news all [n]`        | Get last `n` news items from all providers |
 
 ---
 
-Now your **Web3 Feeds Telegram Bot** is up and running! 🚀
+Now your **Web3 Feeds Telegram Bot** is fully operational and serverless! 🚀
+
