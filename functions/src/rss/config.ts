@@ -17,11 +17,6 @@ export const RSS_FEEDS = [
         logoURI: '',
         rssURI: 'https://decrypt.co/feed',
     },
-    // {
-    //     title: 'Forbes',
-    //     logoURI: '',
-    //     rssURI: 'https://www.forbes.com/crypto-blockchain/feed',
-    // },
 ];
 
 export const callOpts = {
