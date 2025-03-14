@@ -1,5 +1,7 @@
 # Web3 Feeds - Firebase Cloud Function & Telegram Bot
 
+A simple Telegram bot designed for reading Web3 news, providing quick access to the latest updates from multiple news providers.
+
 This guide provides instructions for setting up the Web3 Feeds project in two configurations:
 
 1. **Hosted Solution**: Deploying a Telegram bot on a server.
@@ -70,7 +72,7 @@ Make sure to set your API key:
 Make a request using your API key:
    ```sh
    curl -X GET https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net/getAllFeeds \
-        -H "Authorization: Bearer YOUR_API_KEY" -s | jq .
+        -H \"Authorization: Bearer YOUR_API_KEY\" -s | jq .
    ```
 
 ---
@@ -154,7 +156,7 @@ firebase deploy --only functions:telegramBotWebhook
 Replace `YOUR_BOT_TOKEN` and `YOUR_WEBHOOK_URL` with your actual values:
 
 ```sh
-curl -X GET "https://api.telegram.org/botYOUR_BOT_TOKEN/setWebhook?url=YOUR_WEBHOOK_URL"
+curl -X GET \"https://api.telegram.org/botYOUR_BOT_TOKEN/setWebhook?url=YOUR_WEBHOOK_URL\"
 ```
 
 Example webhook URL:
