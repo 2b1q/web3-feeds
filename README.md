@@ -1,6 +1,5 @@
 # Web3 Feeds - Firebase Cloud Function & Telegram Bot
 
-A simple
 This guide provides instructions for setting up the Web3 Feeds project in two configurations:
 
 1. **Hosted Solution**: Deploying a Telegram bot on a server.
