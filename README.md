@@ -1,4 +1,34 @@
-## Web3 Feeds - Firebase Cloud Function & Telegram Bot
+# Web3 Feeds - Firebase Cloud Function & Telegram Bot
+
+A simple
+This guide provides instructions for setting up the Web3 Feeds project in two configurations:
+
+1. **Hosted Solution**: Deploying a Telegram bot on a server.
+2. **Serverless Solution with Telegram Webhook**: Utilizing Firebase Cloud Functions to handle Telegram webhook events.
+
+## Hosted Solution
+
+```mermaid
+sequenceDiagram
+    participant TG as Telegram User
+    participant Bot as TG Bot (Hosted)
+    participant CF as GCP Cloud Function
+    participant RSS as RSS Feeds Providers
+    
+    TG->>Bot: Sends Message
+    Bot->>CF: Handles Event & Calls Cloud Function
+    CF->>RSS: Fetches Data in Parallel
+    RSS-->>CF: Returns Data
+    CF-->>Bot: Sends Processed Data
+    Bot-->>TG: Replies with Feed Data
+```
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/2b1q/web3-feeds.git
+cd web3-feeds
+```
 
 ### Firebase Cloud Function - RSS Feed Proxy
 
@@ -95,9 +125,22 @@ To keep your bot running continuously, deploy it to a server or use a process ma
 
 ---
 
-### Serverless Telegram Bot with Cloud Functions
+## Serverless Telegram Bot with Cloud Functions
 
-You can run your Telegram bot entirely serverless using Firebase Cloud Functions:
+```mermaid
+sequenceDiagram
+    participant TG as Telegram User
+    participant API as Telegram API
+    participant CF as Cloud Function (Serverless)
+    participant RSS as RSS Feeds providers
+    
+    TG->>API: Sends Message
+    API->>CF: Triggers Webhook
+    CF->>RSS: Fetches Data in Parallel
+    RSS-->>CF: Returns Data
+    CF-->>API: Sends Processed Data
+    API-->>TG: Replies with Feed Data
+```
 
 #### Setup Cloud Function as Webhook
 
@@ -136,6 +179,3 @@ After successful webhook registration, Telegram will send all updates to your Cl
 | `/news all [n]`        | Get last `n` news items from all providers |
 
 ---
-
-Now your **Web3 Feeds Telegram Bot** is fully operational and serverless! 🚀
-
