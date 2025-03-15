@@ -18,7 +18,6 @@ setupHandlers(bot);
 export async function telegramBotWebhook(req: Request, res: Response) {
     logRequest(req);
     try {
-        // Telegraf can handle the incoming update from Telegram
         await bot.handleUpdate(req.body);
         res.status(200).send('OK');
     } catch (err) {
