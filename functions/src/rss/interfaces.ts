@@ -1,3 +1,9 @@
+export enum NewsProvider {
+    COINDESK = 'coindesk',
+    COINTELEGRAPH = 'cointelegraph',
+    DECRYPT = 'decrypt'
+}
+
 export type RssGuid =
     | {
         '#text': string;
@@ -52,6 +58,11 @@ export interface BaseRssItem {
     'dc:creator'?: string;
 }
 
+export type RssItem = Pick<BaseRssItem, 'title' | 'pubDate' | 'link' | 'description'> & {
+    id: string;
+    author: string;
+    thumbnail: string;
+}
 export interface RssResponse<T = BaseRssItem> {
     rss: {
         channel: {
@@ -70,15 +81,6 @@ export interface RssSourse {
     rssURI: string;
 }
 
-export interface RssItem {
-    title: string;
-    pubDate: string;
-    link: string;
-    id: string;
-    author: string;
-    thumbnail: string;
-    description: string;
-}
 
 export interface RssChannelResponse {
     link: string;
