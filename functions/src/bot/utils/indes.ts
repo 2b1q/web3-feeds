@@ -1,4 +1,4 @@
-import { Request } from 'express';
+import * as tg from 'telegraf/types';
 import { Context, NarrowedContext } from 'telegraf';
 import { Message, Update } from '@telegraf/types';
 import * as functions from 'firebase-functions';
@@ -63,8 +63,22 @@ function parseRssChannel(channelData: any): RssItem[] {
     }));
 }
 
-export function logRequest(req: Request): void {
-    functions.logger.info('Incoming Telegram update:', req.body);
+export function logRequest(update: tg.Update): void {
+    if (update && 'message' in update) {
+        const command = 'text' in update.message ? update.message.text : '';
+        const user = update.message.from;
+
+        functions.logger.info("Received command", {
+            command,
+            user: {
+                id: user.id,
+                username: user.username || 'unknown',
+                first_name: user.first_name,
+                last_name: user.last_name || '',
+                language_code: user.language_code || 'unknown'
+            }
+        });
+    }
 }
 
 /**

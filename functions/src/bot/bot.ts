@@ -16,7 +16,7 @@ setupHandlers(bot);
 
 // webhook entry point
 export async function telegramBotWebhook(req: Request, res: Response) {
-    logRequest(req);
+    logRequest(req.body);
     try {
         await bot.handleUpdate(req.body);
         res.status(200).send('OK');
